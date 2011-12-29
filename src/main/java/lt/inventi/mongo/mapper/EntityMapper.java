@@ -17,9 +17,9 @@ import com.mongodb.DBObject;
 
 public class EntityMapper {
 
-    private Map<Class<?>, TypeConverter<?>> converters = new HashMap<Class<?>, TypeConverter<?>>();
+    private Map<Class<?>, AutoConverter<?>> converters = new HashMap<Class<?>, AutoConverter<?>>();
 
-    public void setConverters(Map<Class<?>, TypeConverter<?>> converters) {
+    public void setConverters(Map<Class<?>, AutoConverter<?>> converters) {
         this.converters = converters;
     }
 
@@ -32,7 +32,7 @@ public class EntityMapper {
      * @return
      * @throws Exception
      */
-    public DBObject convertEntity(Object entity) throws Exception {
+    public DBObject dbObject(Object entity) throws Exception {
         DBObject dbObject = (DBObject) convertPojo(entity);
         return dbObject;
     }
@@ -45,9 +45,9 @@ public class EntityMapper {
      * @throws Exception
      */
     private Object convertPojo(Object pojo) throws Exception {
-        TypeConverter<Object> converter = (TypeConverter<Object>) converters.get(pojo.getClass());
+        AutoConverter<Object> converter = (AutoConverter<Object>) converters.get(pojo.getClass());
         if (converter != null) {
-            return converter.convertToDBValue(pojo);
+            return converter.dbValue(pojo);
         }
 
         BasicDBObject dbObject = new BasicDBObject();
@@ -106,9 +106,9 @@ public class EntityMapper {
 
     private List<?> convertListValue(List<?> col) throws Exception {
         Object firstVal = col.iterator().next();
-        TypeConverter<Object> converter = (TypeConverter<Object>) converters.get(firstVal.getClass());
+        AutoConverter<Object> converter = (AutoConverter<Object>) converters.get(firstVal.getClass());
         if (converter != null) {
-            return converter.convertToDBList((List<Object>) col);
+            return converter.dbValues((List<Object>) col);
         }
 
         List<Object> dbObjList = new BasicDBList();

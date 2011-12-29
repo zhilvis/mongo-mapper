@@ -21,13 +21,13 @@ public class DBObjectMapper {
 
     private static final Logger log = LoggerFactory.getLogger(DBObjectMapper.class);
 
-    private Map<Class<?>, TypeConverter<?>> converters = new HashMap<Class<?>, TypeConverter<?>>();
+    private Map<Class<?>, AutoConverter<?>> converters = new HashMap<Class<?>, AutoConverter<?>>();
 
-    protected void setConverters(Map<Class<?>, TypeConverter<?>> converters) {
+    protected void setConverters(Map<Class<?>, AutoConverter<?>> converters) {
         this.converters = converters;
     }
 
-    public <T> T convertDBObject(DBObject doc, T entity) throws Exception {
+    public <T> T entity(DBObject doc, T entity) throws Exception {
         return doConvertDBObject(doc, entity);
     }
 
@@ -88,10 +88,10 @@ public class DBObjectMapper {
 
         Object convertedValue = null;
         Class<?> valueType = field.getType();
-        TypeConverter<?> converter = converters.get(valueType);
+        AutoConverter<?> converter = converters.get(valueType);
 
         if (converter != null) {
-            convertedValue = converter.convertFromDBValue(value);
+            convertedValue = converter.entityValue(value);
         } else if (value instanceof List<?>) {
             List<Object> targetList = null;
             convertedValue = convertListValue(field, (List<?>) value, targetList);
@@ -123,9 +123,9 @@ public class DBObjectMapper {
     private <T> Object convertListValue(Field field, List<?> source, Collection<Object> target) throws Exception {
 
         Class<?> fieldType = getListGenericType(field);
-        TypeConverter<?> converter = converters.get(fieldType);
+        AutoConverter<?> converter = converters.get(fieldType);
         if (converter != null) {
-            return converter.convertFromDBList(source);
+            return converter.entityValues(source);
         }
 
         if (target == null) {

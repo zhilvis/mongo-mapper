@@ -16,7 +16,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 import lt.inventi.mongo.mapper.MongoMapper;
-import lt.inventi.mongo.mapper.TypeConverter;
+import lt.inventi.mongo.mapper.AutoConverter;
 import lt.inventi.mongo.mapper.model.AnotherEntity;
 import lt.inventi.mongo.mapper.model.ConvertableClass;
 import lt.inventi.mongo.mapper.model.Entity;
@@ -34,11 +34,11 @@ import com.mongodb.DBObject;
 public class MongoMapperTest {
 
     private MongoMapper objectMapper = new MongoMapper();
-    private HashMap<Class<?>, TypeConverter<?>> converters;
+    private HashMap<Class<?>, AutoConverter<?>> converters;
 
     @Before
     public void setUp() {
-        converters = new HashMap<Class<?>, TypeConverter<?>>();
+        converters = new HashMap<Class<?>, AutoConverter<?>>();
         objectMapper.setConverters(converters);
     }
 
@@ -274,14 +274,14 @@ public class MongoMapperTest {
 
         final ConvertableClass listType = new ConvertableClass("");
         final ConvertableClass convertableType = new ConvertableClass("");
-        converters.put(ConvertableClass.class, new TypeConverter<ConvertableClass>() {
+        converters.put(ConvertableClass.class, new AutoConverter<ConvertableClass>() {
             @Override
-            public Object convertToDBValue(ConvertableClass object) {
+            public Object dbValue(ConvertableClass object) {
                 return "TEST_CODE";
             }
 
             @Override
-            public ConvertableClass convertFromDBValue(Object dbValue) {
+            public ConvertableClass entityValue(Object dbValue) {
                 if ("TEST_CODE".equals(dbValue)) {
                     return convertableType;
                 }
@@ -289,7 +289,7 @@ public class MongoMapperTest {
             }
 
             @Override
-            public List<?> convertToDBList(List<ConvertableClass> objectList) {
+            public List<?> dbValues(List<ConvertableClass> objectList) {
                 List<Object> dbList = new ArrayList<Object>();
                 for (ConvertableClass aClass : objectList) {
                     dbList.add("TEST_LIST");
@@ -298,7 +298,7 @@ public class MongoMapperTest {
             }
 
             @Override
-            public List<ConvertableClass> convertFromDBList(List<?> dbList) {
+            public List<ConvertableClass> entityValues(List<?> dbList) {
                 List<ConvertableClass> list = new ArrayList<ConvertableClass>();
                 for (Object obj : dbList) {
                     if ("TEST_LIST".equals(obj)) {

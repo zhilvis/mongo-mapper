@@ -9,17 +9,17 @@ import com.mongodb.DBObject;
 
 public class MongoMapper {
 
-    private EntityMapper entityConverter;
-    private DBObjectMapper dbObjectConverter;
+    private EntityMapper entityMapper;
+    private DBObjectMapper dbObjectMapper;
 
     public MongoMapper() {
-        this.entityConverter = new EntityMapper();
-        this.dbObjectConverter = new DBObjectMapper();
+        this.entityMapper = new EntityMapper();
+        this.dbObjectMapper = new DBObjectMapper();
     }
 
-    public void setConverters(Map<Class<?>, TypeConverter<?>> converters) {
-        dbObjectConverter.setConverters(converters);
-        entityConverter.setConverters(converters);
+    public void setConverters(Map<Class<?>, AutoConverter<?>> converters) {
+        dbObjectMapper.setConverters(converters);
+        entityMapper.setConverters(converters);
     }
 
     /**
@@ -31,7 +31,7 @@ public class MongoMapper {
      */
     public DBObject dbObject(Object entity) {
         try {
-            return entityConverter.convertEntity(entity);
+            return entityMapper.dbObject(entity);
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
@@ -52,7 +52,7 @@ public class MongoMapper {
      */
     public <T> T entity(DBObject dbObj, T entity) {
         try {
-            return dbObjectConverter.convertDBObject(dbObj, entity);
+            return dbObjectMapper.entity(dbObj, entity);
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
