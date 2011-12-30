@@ -39,9 +39,8 @@ public class DBObjectMapper {
             return null;
         }
 
-        Field[] fields = MapperUtils.getDeclaredFields(entity);
+        List<Field> fields = MapperUtils.getDeclaredFields(entity);
         for (Field field : fields) {
-            field.setAccessible(true);
             String fieldName = field.getName();
             if ("id".equals(fieldName)) {
                 Object id = doc.get("_id");

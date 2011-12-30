@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class Entity extends ParentEntity {
 
+	private final static String staticField="value";
     private String id;
     private List<NestedEntity> nestedList;
     private NestedEntity nestedSingle;
@@ -33,8 +34,18 @@ public class Entity extends ParentEntity {
     private List<ConvertableClass> convertableList;
 
     private byte[] bytes;
+    
+    private Class<?> aClass;
 
-    public void setListOfStrings(List<String> listOfStrings) {
+    public Class<?> getaClass() {
+		return aClass;
+	}
+
+	public void setaClass(Class<?> aClass) {
+		this.aClass = aClass;
+	}
+
+	public void setListOfStrings(List<String> listOfStrings) {
         this.listOfStrings = listOfStrings;
     }
 

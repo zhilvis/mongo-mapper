@@ -33,28 +33,28 @@ import com.mongodb.DBObject;
 
 public class MongoMapperTest {
 
-    private MongoMapper objectMapper = new MongoMapper();
+    private MongoMapper mongoMapper = new MongoMapper();
     private HashMap<Class<?>, AutoConverter<?>> converters;
 
     @Before
     public void setUp() {
         converters = new HashMap<Class<?>, AutoConverter<?>>();
-        objectMapper.setConverters(converters);
+        mongoMapper.setConverters(converters);
     }
 
     @Test
     public void testPerformance() {
         Entity inv = createEntity();
         for (int i = 0; i < 10; i++) {
-            DBObject dbObj = objectMapper.dbObject(inv);
-            objectMapper.entity(dbObj, new Entity());
+            DBObject dbObj = mongoMapper.dbObject(inv);
+            mongoMapper.entity(dbObj, new Entity());
         }
 
         long time = System.currentTimeMillis();
 
         for (int i = 0; i < 100; i++) {
-            DBObject dbObj = objectMapper.dbObject(inv);
-            objectMapper.entity(dbObj, new Entity());
+            DBObject dbObj = mongoMapper.dbObject(inv);
+            mongoMapper.entity(dbObj, new Entity());
         }
         time = System.currentTimeMillis() - time;
         double result = time / 100D;
@@ -62,37 +62,51 @@ public class MongoMapperTest {
         // " but was - "+result , acceptable > result);
         System.out.println("result: " + result);
     }
+    
+    @Test
+    public void testStaticFieldsShouldBeSkipped(){
+    	DBObject dbObject = mongoMapper.dbObject(new Entity());
+    	assertNull("static field should not be mapped", 
+    			dbObject.get("staticField"));
+    }
+    
+    @Test
+    public void testClassMappingShouldBeSkipped(){
+    	Entity entity = new Entity();
+    	entity.setaClass(this.getClass());
+    	assertNull(mongoMapper.dbObject(entity).get("aClass"));
+    }
 
     @Test
     public void testParentEntityMapping() {
         Entity entity = new Entity();
         entity.setParentField("parent");
 
-        DBObject dbObject = objectMapper.dbObject(entity);
+        DBObject dbObject = mongoMapper.dbObject(entity);
         assertEquals("parent", dbObject.get("parentField"));
 
-        Entity newEntity = objectMapper.entity(dbObject, new Entity());
+        Entity newEntity = mongoMapper.entity(dbObject, new Entity());
         assertEquals("parent", newEntity.getParentField());
     }
 
     @Test
     public void testValueObjectMapping() {
         ValueObject obj = new ValueObject("test", 123);
-        DBObject dbObj = objectMapper.dbObject(obj);
+        DBObject dbObj = mongoMapper.dbObject(obj);
         assertEquals("test", dbObj.get("stringValue"));
         assertEquals(123, dbObj.get("intValue"));
 
-        ValueObject newObj = objectMapper.entity(dbObj, new ValueObject());
+        ValueObject newObj = mongoMapper.entity(dbObj, new ValueObject());
         assertEquals(obj, newObj);
     }
 
     @Test
     public void testId() {
         Entity entity = new Entity();
-        entity = objectMapper.entity(new BasicDBObject("_id", new ObjectId()), entity);
+        entity = mongoMapper.entity(new BasicDBObject("_id", new ObjectId()), entity);
         assertNotNull("id is not mapped", entity.getId());
 
-        DBObject dbObject = objectMapper.dbObject(entity);
+        DBObject dbObject = mongoMapper.dbObject(entity);
 
         assertNotNull("id is not mapped", dbObject.get("_id"));
         assertTrue(dbObject.get("_id") instanceof ObjectId);
@@ -137,7 +151,7 @@ public class MongoMapperTest {
 
         expected.put("bytes", "bytesTest".getBytes());
 
-        DBObject actualDBObj = objectMapper.dbObject(testEntity);
+        DBObject actualDBObj = mongoMapper.dbObject(testEntity);
 
         assertEquals(new String((byte[]) expected.removeField("bytes")),
                 new String((byte[]) actualDBObj.removeField("bytes")));
@@ -148,11 +162,11 @@ public class MongoMapperTest {
     @Test
     public void testMappedTypeSetting() {
         Entity testEntity = createEntity();
-        DBObject dbObj = objectMapper.dbObject(testEntity);
+        DBObject dbObj = mongoMapper.dbObject(testEntity);
         NestedEntity nested = new NestedEntity();
         nested.setString("myEntity");
         dbObj.put("nestedSingle", nested);
-        Entity newEntity = objectMapper.entity(dbObj, new Entity());
+        Entity newEntity = mongoMapper.entity(dbObj, new Entity());
 
         Assert.assertEquals("myEntity", newEntity.getNestedSingle().getString());
     }
@@ -169,7 +183,7 @@ public class MongoMapperTest {
 
         Entity testEntity = createEntity();
 
-        DBObject dbObj = objectMapper.dbObject(testEntity);
+        DBObject dbObj = mongoMapper.dbObject(testEntity);
         dbObj.put("_id", new ObjectId("4bba12b8867a00000000bc13"));
 
         // Mongo mongo = new Mongo(new DBAddress("localhost", "zz"));
@@ -178,7 +192,7 @@ public class MongoMapperTest {
         // col.insert(dbObj);
         // dbObj = col.findOne(new BasicDBObject("_id", dbObj.get("_id")));
 
-        Entity newTestEntity = (Entity) objectMapper.entity(dbObj, new Entity());
+        Entity newTestEntity = (Entity) mongoMapper.entity(dbObj, new Entity());
 
         assertEquals("test", newTestEntity.getString());
         assertEquals(new Integer(123), newTestEntity.getInteger());
@@ -228,20 +242,20 @@ public class MongoMapperTest {
         Locale.setDefault(new Locale("lt", "LT"));
         Entity testEntity = createEntity();
         testEntity.setBigDecimal(new BigDecimal("123456789.255123456789"));
-        DBObject object = objectMapper.dbObject(testEntity);
+        DBObject object = mongoMapper.dbObject(testEntity);
         String bigDecimal = (String) object.get("bigDecimal");
         assertEquals("123456789.255123456789", bigDecimal);
 
         BasicDBObject obj = new BasicDBObject("bigDecimal", "123456789.255123456789");
         testEntity = new Entity();
-        objectMapper.entity(obj, testEntity);
+        mongoMapper.entity(obj, testEntity);
         assertEquals(new BigDecimal("123456789.255123456789"), testEntity.getBigDecimal());
 
         try {
             obj.put("bigDecimal", "BAD FORMAT");
             // TODO what exactly should happen here? should util handle the
             // error?
-            objectMapper.entity(obj, testEntity);
+            mongoMapper.entity(obj, testEntity);
         } catch (Exception ex) {
 
         }
@@ -252,9 +266,9 @@ public class MongoMapperTest {
     public void testFromDBObjectItem() throws Exception {
 
         Entity testEntity = createEntity();
-        DBObject dbObj = objectMapper.dbObject(testEntity);
+        DBObject dbObj = mongoMapper.dbObject(testEntity);
 
-        AnotherEntity anotherEntity = objectMapper.entity(dbObj, new AnotherEntity());
+        AnotherEntity anotherEntity = mongoMapper.entity(dbObj, new AnotherEntity());
 
         assertEquals("test", anotherEntity.getString());
         assertEquals(new Integer(123), anotherEntity.getInteger());
@@ -308,7 +322,7 @@ public class MongoMapperTest {
                 return list;
             }
         });
-        objectMapper.setConverters(converters);
+        mongoMapper.setConverters(converters);
 
         Entity entity = new Entity();
         entity.setConvertableClass(convertableType);
@@ -317,12 +331,12 @@ public class MongoMapperTest {
         convertableList.add(convertableType);
         entity.setConvertableList(convertableList);
 
-        DBObject dbObject = objectMapper.dbObject(entity);
+        DBObject dbObject = mongoMapper.dbObject(entity);
         assertEquals("TEST_CODE", dbObject.get("convertableClass"));
         assertEquals("TEST_LIST", ((List) dbObject.get("convertableList")).get(0));
         assertEquals("TEST_LIST", ((List) dbObject.get("convertableList")).get(1));
 
-        entity = objectMapper.entity(dbObject, new Entity());
+        entity = mongoMapper.entity(dbObject, new Entity());
 
         assertEquals(convertableType, entity.getConvertableClass());
         assertEquals(listType, entity.getConvertableList().get(0));

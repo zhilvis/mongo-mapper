@@ -1,10 +1,13 @@
 package lt.inventi.mongo.mapper;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class MapperUtils {
 
@@ -53,19 +56,30 @@ public class MapperUtils {
         return entity;
     }
 
-    public static Field[] getDeclaredFields(Object pojo) {
-        Field[] fields = pojo.getClass().getDeclaredFields();
+    public static List<Field> getDeclaredFields(Object pojo) {
+    	List<Field> fields = getFields(pojo.getClass());
 
         Class<?> parentClass = pojo.getClass().getSuperclass();
 
         while (!parentClass.equals(Object.class)) {
-            Field[] parentFields = parentClass.getDeclaredFields();
-            Field[] allFields = new Field[fields.length + parentFields.length];
-            System.arraycopy(parentFields, 0, allFields, 0, parentFields.length);
-            System.arraycopy(fields, 0, allFields, parentFields.length, fields.length);
-            fields = allFields;
+            fields.addAll(getFields(parentClass));
             parentClass = parentClass.getSuperclass();
         }
         return fields;
     }
+
+	private static List<Field> getFields(Class<?> aClass) {
+		List<Field> fields = new ArrayList<Field>();
+        for(Field field : aClass.getDeclaredFields()){
+        	field.setAccessible(true);
+        	int modifiers = field.getModifiers();
+        	if(Modifier.isStatic(modifiers)
+        			|| "java.lang.Class".equals(field.getType().getName())
+        			|| "serialVersionUID".equals(field.getName())){
+        		continue;
+        	}
+        	fields.add(field);
+        }
+		return fields;
+	}
 }

@@ -52,12 +52,10 @@ public class EntityMapper {
 
         BasicDBObject dbObject = new BasicDBObject();
 
-        Field[] fields = getDeclaredFields(pojo);
+        List<Field> fields = getDeclaredFields(pojo);
 
         for (Field field : fields) {
-            field.setAccessible(true);
             String fieldName = field.getName();
-
             Object value = field.get(pojo);
             if (value == null) {
                 continue;
