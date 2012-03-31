@@ -1,11 +1,4 @@
-/misc/contributions
-/misc/fitnesse
-/misc/neo
-/misc/selenesse
-.svn
 target
 .settings
 .project
 .classpath
-*.iml
-.idea
